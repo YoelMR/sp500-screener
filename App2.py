@@ -121,6 +121,8 @@ st.subheader("All Candidates")
 
 st.dataframe(df)
 
+import plotly.graph_objects as go
+
 ticker_selected = st.selectbox("Select stock", df["Ticker"])
 
 chart = yf.download(
@@ -130,23 +132,47 @@ chart = yf.download(
     auto_adjust=True
 )
 
-if chart is None or chart.empty:
-    st.warning("No data returned from Yahoo Finance")
-else:
+if not chart.empty:
 
-    # Asegurar columnas simples
     chart.columns = [col if isinstance(col, str) else col[0] for col in chart.columns]
 
-    if "Close" not in chart.columns:
-        st.warning("Close price not available")
-    else:
+    chart["SMA200"] = chart["Close"].rolling(200).mean()
+    chart["SMA50"] = chart["Close"].rolling(50).mean()
 
-        chart["SMA200"] = chart["Close"].rolling(200).mean()
-        chart["SMA50"] = chart["Close"].rolling(50).mean()
+    plot = chart[["Close","SMA50","SMA200"]].dropna()
 
-        plot = chart[["Close","SMA50","SMA200"]].dropna()
+    if not plot.empty:
 
-        if plot.empty:
-            st.warning("Not enough data for SMA calculation")
-        else:
-            st.line_chart(plot)
+        ymin = plot.min().min() * 0.98
+        ymax = plot.max().max() * 1.02
+
+        fig = go.Figure()
+
+        fig.add_trace(go.Scatter(
+            x=plot.index,
+            y=plot["Close"],
+            name="Price"
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=plot.index,
+            y=plot["SMA50"],
+            name="SMA50"
+        ))
+
+        fig.add_trace(go.Scatter(
+            x=plot.index,
+            y=plot["SMA200"],
+            name="SMA200"
+        ))
+
+        fig.update_layout(
+            height=500,
+            yaxis=dict(range=[ymin, ymax]),
+            margin=dict(l=20,r=20,t=40,b=20)
+        )
+
+        st.plotly_chart(fig, use_container_width=True)
+
+else:
+    st.warning("No data available")
