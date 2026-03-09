@@ -3,6 +3,7 @@ import pandas as pd
 import yfinance as yf
 import numpy as np
 
+st.set_page_config(layout="wide")
 st.title("📊 S&P500 Opportunity Screener")
 
 stocks = {
@@ -122,17 +123,30 @@ st.dataframe(df)
 
 ticker_selected = st.selectbox("Select stock", df["Ticker"])
 
-chart = yf.download(ticker_selected, period="1y", progress=False)
+chart = yf.download(
+    ticker_selected,
+    period="1y",
+    progress=False,
+    auto_adjust=True
+)
 
-if not chart.empty and "Close" in chart.columns:
-
-    chart["SMA200"] = chart["Close"].rolling(200).mean()
-    chart["SMA50"] = chart["Close"].rolling(50).mean()
-
-    chart_plot = chart[["Close","SMA50","SMA200"]].dropna()
-
-    st.line_chart(chart_plot)
-
+if chart is None or chart.empty:
+    st.warning("No data returned from Yahoo Finance")
 else:
 
-    st.warning("No price data available for this ticker")
+    # Asegurar columnas simples
+    chart.columns = [col if isinstance(col, str) else col[0] for col in chart.columns]
+
+    if "Close" not in chart.columns:
+        st.warning("Close price not available")
+    else:
+
+        chart["SMA200"] = chart["Close"].rolling(200).mean()
+        chart["SMA50"] = chart["Close"].rolling(50).mean()
+
+        plot = chart[["Close","SMA50","SMA200"]].dropna()
+
+        if plot.empty:
+            st.warning("Not enough data for SMA calculation")
+        else:
+            st.line_chart(plot)
