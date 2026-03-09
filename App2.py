@@ -120,11 +120,19 @@ st.subheader("All Candidates")
 
 st.dataframe(df)
 
-ticker_selected = st.selectbox("Select stock",df["Ticker"])
+ticker_selected = st.selectbox("Select stock", df["Ticker"])
 
-chart = yf.download(ticker_selected,period="1y")
+chart = yf.download(ticker_selected, period="1y", progress=False)
 
-chart["SMA200"] = chart["Close"].rolling(200).mean()
-chart["SMA50"] = chart["Close"].rolling(50).mean()
+if not chart.empty and "Close" in chart.columns:
 
-st.line_chart(chart[["Close","SMA50","SMA200"]])
+    chart["SMA200"] = chart["Close"].rolling(200).mean()
+    chart["SMA50"] = chart["Close"].rolling(50).mean()
+
+    chart_plot = chart[["Close","SMA50","SMA200"]].dropna()
+
+    st.line_chart(chart_plot)
+
+else:
+
+    st.warning("No price data available for this ticker")
