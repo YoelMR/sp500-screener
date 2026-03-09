@@ -12,7 +12,7 @@ tickers = [
 "ADBE","CRM","NFLX","AMD","INTC","CSCO","WMT"
 ]
 
-threshold = st.slider("Distance from SMA200 (%)",1,10,3)
+threshold = st.slider("Distance from SMA200 (%)",1,50,3)
 
 results = []
 
