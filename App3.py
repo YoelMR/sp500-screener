@@ -12,11 +12,9 @@ threshold = st.slider("Distance from SMA200 (%)", 1.0, 50.0, 5.0)
 @st.cache_data
 def get_sp500_tickers():
 
-    table = pd.read_html(
-        "https://en.wikipedia.org/wiki/List_of_S%26P_500_companies"
-    )
+    url = "https://datahub.io/core/s-and-p-500-companies/r/constituents.csv"
 
-    df = table[0]
+    df = pd.read_csv(url)
 
     tickers = df["Symbol"].tolist()
 
