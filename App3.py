@@ -111,40 +111,61 @@ if not df.empty:
         auto_adjust=True
     )
 
-    if not chart.empty:
+    if chart is None or chart.empty:
 
-        chart["SMA200"] = chart["Close"].rolling(200).mean()
-        chart["SMA50"] = chart["Close"].rolling(50).mean()
+        st.warning("No data returned for this ticker")
 
-        plot = chart[["Close","SMA50","SMA200"]].dropna()
+    else:
 
-        ymin = plot.min().min() * 0.98
-        ymax = plot.max().max() * 1.02
+        # Asegurar columnas simples
+        chart.columns = [c if isinstance(c,str) else c[0] for c in chart.columns]
 
-        fig = go.Figure()
+        if "Close" not in chart.columns:
 
-        fig.add_trace(go.Scatter(
-            x=plot.index,
-            y=plot["Close"],
-            name="Price"
-        ))
+            st.warning("Close price not available")
 
-        fig.add_trace(go.Scatter(
-            x=plot.index,
-            y=plot["SMA50"],
-            name="SMA50"
-        ))
+        else:
 
-        fig.add_trace(go.Scatter(
-            x=plot.index,
-            y=plot["SMA200"],
-            name="SMA200"
-        ))
+            chart["SMA200"] = chart["Close"].rolling(200).mean()
+            chart["SMA50"] = chart["Close"].rolling(50).mean()
 
-        fig.update_layout(
-            height=500,
-            yaxis=dict(range=[ymin, ymax]),
-            margin=dict(l=20,r=20,t=40,b=20)
-        )
+            plot = chart[["Close","SMA50","SMA200"]]
 
-        st.plotly_chart(fig, use_container_width=True)
+            # eliminar filas iniciales sin medias
+            plot = plot.dropna()
+
+            if plot.empty:
+
+                st.warning("Not enough data for SMA calculation")
+
+            else:
+
+                ymin = plot.min().min()*0.98
+                ymax = plot.max().max()*1.02
+
+                fig = go.Figure()
+
+                fig.add_trace(go.Scatter(
+                    x=plot.index,
+                    y=plot["Close"],
+                    name="Price"
+                ))
+
+                fig.add_trace(go.Scatter(
+                    x=plot.index,
+                    y=plot["SMA50"],
+                    name="SMA50"
+                ))
+
+                fig.add_trace(go.Scatter(
+                    x=plot.index,
+                    y=plot["SMA200"],
+                    name="SMA200"
+                ))
+
+                fig.update_layout(
+                    height=500,
+                    yaxis=dict(range=[ymin,ymax])
+                )
+
+                st.plotly_chart(fig, use_container_width=True)
