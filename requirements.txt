@@ -1,4 +1,6 @@
 streamlit
 pandas
 yfinance
+numpy
 lxml
+plotly
